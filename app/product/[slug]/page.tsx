@@ -5,10 +5,14 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import RelatedProducts from "@/components/related-products";
 import AddToCartButton from "@/components/add-to-cart";
+import BuyNowButton from "@/components/buy-now";
 import { formatUSD } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
+import { showBuyNowFlag } from "@/lib/flags";
+import { Suspense } from "react";
+import ButtonSkeleton from "@/components/ui/button-skeleton";
 
 export default async function ProductDetailPage({
   params,
@@ -111,7 +115,10 @@ export default async function ProductDetailPage({
               </RadioGroup>
             </div>
             <div className="space-y-2">
-              <AddToCartButton productId={product.id} />
+              <Suspense fallback={<ButtonSkeleton />}>
+                <Purchase productId={product.id} />
+              </Suspense>
+
               <Link
                 href="/cart"
                 prefetch={true}
@@ -126,5 +133,15 @@ export default async function ProductDetailPage({
       </section>
       <RelatedProducts slug={product.slug} />
     </main>
+  );
+}
+
+async function Purchase({ productId }: { productId: string }) {
+  const showBuyNow = await showBuyNowFlag();
+  return (
+    <div className="flex flex-row gap-2">
+      <AddToCartButton productId={productId} />
+      {showBuyNow.show && <BuyNowButton text={showBuyNow.text} />}
+    </div>
   );
 }
